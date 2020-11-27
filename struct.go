@@ -1,12 +1,19 @@
 package godnsbl
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
 // The main running service
 type LookupService struct {
+	DnsblTimeout string  `yaml:"DnsblTimeout" json:"DnsblTimeout"`
 	DnsblListing []Dnsbl `yaml:"DroneListing" json:"DroneListing"`
 	StartTime    int64
 	TotalChecked uint64
+
+	// We parse DnsblTimeout and store it in an unexported time.Duration so we only have to parse it once
+	timeout time.Duration
 }
 
 // Each Dnsbl we add

@@ -1,3 +1,4 @@
+DnsblTimeout: 60s
 DroneListing:
   - Name: DroneBL
     Address: .dnsbl.dronebl.org

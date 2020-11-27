@@ -51,7 +51,7 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 			ok.Clear = counter.ClearCount
 			counter.RUnlock()
 			return ok
-		case <-time.After(30 * time.Second):
+		case <-time.After(l.timeout):
 			counter.RLock()
 			endcount := counter.ClearCount
 			counter.RUnlock()

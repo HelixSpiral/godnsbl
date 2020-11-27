@@ -2,6 +2,7 @@ package godnsbl
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"time"
 
@@ -23,7 +24,12 @@ func NewLookupServiceWithConfig(configFile string) *LookupService {
 
 	err = yaml.Unmarshal(configData, lookupService)
 	if err != nil {
-		panic(err)
+		log.Fatal("Could not unmarshal the data:", err)
+	}
+
+	lookupService.timeout, err = time.ParseDuration(lookupService.DnsblTimeout)
+	if err != nil {
+		log.Fatal("Failed to parse dnsbl timeout:", lookupService.DnsblTimeout)
 	}
 
 	return lookupService
@@ -32,7 +38,8 @@ func NewLookupServiceWithConfig(configFile string) *LookupService {
 // Creating a new service without a config file
 func NewLookupService() *LookupService {
 	return &LookupService{
-		StartTime: time.Now().Unix(),
+		DnsblTimeout: "30s",
+		StartTime:    time.Now().Unix(),
 	}
 }
 
@@ -40,7 +47,7 @@ func NewLookupService() *LookupService {
 func readConfig(configFile string) []byte {
 	yamlFile, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		panic(err)
+		log.Fatal("Could not read the config file:", err)
 	}
 
 	return yamlFile
