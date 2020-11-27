@@ -9,7 +9,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Creating a new service with a config file
+// NewLookupServiceWithConfig creates a new service using a config file
 func NewLookupServiceWithConfig(configFile string) *LookupService {
 	lookupService := NewLookupService()
 
@@ -35,7 +35,7 @@ func NewLookupServiceWithConfig(configFile string) *LookupService {
 	return lookupService
 }
 
-// Creating a new service without a config file
+// NewLookupService creates a new service without using a config file
 func NewLookupService() *LookupService {
 	return &LookupService{
 		DnsblTimeout: "30s",
@@ -45,7 +45,7 @@ func NewLookupService() *LookupService {
 	}
 }
 
-// Reading the actual config file
+// readConfig reads the config file
 func readConfig(configFile string) []byte {
 	yamlFile, err := ioutil.ReadFile(configFile)
 	if err != nil {

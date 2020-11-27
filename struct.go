@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// The main running service
+// LookupService is the main running service
 type LookupService struct {
 	DnsblTimeout string  `yaml:"DnsblTimeout" json:"DnsblTimeout"`
 	DnsblListing []Dnsbl `yaml:"DroneListing" json:"DroneListing"`
@@ -16,7 +16,7 @@ type LookupService struct {
 	timeout time.Duration
 }
 
-// Each Dnsbl we add
+// Dnsbl stores the data for each Dnbsl we have
 type Dnsbl struct {
 	Name       string            `yaml:"Name" json:"Name"`
 	Address    string            `yaml:"Address" json:"Address"`
@@ -25,7 +25,7 @@ type Dnsbl struct {
 	BanMessage string            `yaml:"BanMessage" json:"BanMessage"`
 }
 
-// Standard data format for returning info from a Dnsbl
+// DnsblReturn is the standard data format for returning info from a Dnsbl
 type DnsblReturn struct {
 	IP      string
 	Type    string

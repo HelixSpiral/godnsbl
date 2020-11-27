@@ -1,3 +1,4 @@
+// Package godnsbl implements dnsbl lookups
 package godnsbl
 
 import (
@@ -9,7 +10,7 @@ import (
 	"time"
 )
 
-// Get the first reply from our lookup lists
+// GetFirstDnsblReply gets the first reply from our lookup lists
 func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 	l.TotalChecked += 1
 	reversedIP := reverseIP(stringIP)
@@ -78,7 +79,7 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 	}
 }
 
-// Check to see if the string we got has a reply that's in our list of matches
+// replyMatch checks to see if the string we got has a reply that's in our list of matches
 // that we want to ban
 func replyMatch(check string, list []int) bool {
 	checkstrip := strings.LastIndex(check, ".") + 1   // Strip all but the last part
@@ -98,7 +99,7 @@ func replyMatch(check string, list []int) bool {
 
 }
 
-// Take the IP we're given and reverse it
+// reverseIP takes the IP we're given and reverse it
 func reverseIP(IP string) string {
 	var stringSplitIP []string
 
