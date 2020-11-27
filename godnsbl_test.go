@@ -10,15 +10,15 @@ func TestGetFirstDnsblReply(t *testing.T) {
 	dnsbl := godnsbl.NewLookupService()
 
 	dnsbl.DnsblListing = append(dnsbl.DnsblListing, godnsbl.Dnsbl{
-		Name:       "Test - DroneBL",
-		Address:    ".dnsbl.dronebl.org",
-		BanList:    []int{1},
-		BanMessage: "%IPADDR found",
+		Name:         "Test - DroneBL",
+		Address:      ".dnsbl.dronebl.org",
+		BlockList:    []int{1},
+		BlockMessage: "%IPADDR found",
 	})
 
 	reply := dnsbl.GetFirstDnsblReply("127.0.0.2")
 
-	if reply.Type != "BAN" {
+	if reply.Type != "BLOCK" {
 		t.Errorf("Expended a ban, got: %+v\r\n", reply)
 	}
 

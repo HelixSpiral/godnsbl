@@ -16,7 +16,7 @@ DroneListing:
       15: Compromised router / gateway
       17: Automatically determined botnet IPs (experimental)
       255: Unknown
-    BanList:
+    BlockList:
       - 2
       - 3
       - 5
@@ -29,7 +29,7 @@ DroneListing:
       - 14
       - 15
       - 17
-    BanMessage: "You were detected in the DroneBL. For more information you can visit http://dronebl.org/lookup_branded?ip=%IPADDR"
+    BlockMessage: "You were detected in the DroneBL. For more information you can visit http://dronebl.org/lookup_branded?ip=%IPADDR"
   
   - Name: EfnetRBL
     Address: .rbl.efnetrbl.org
@@ -39,10 +39,10 @@ DroneListing:
       3: spamtrap50
       4: TOR
       5: Drones / Flooding
-    BanList:
+    BlockList:
       - 1
       - 2
       - 3
       - 4
       - 5
-    BanMessage: "Blacklisted proxy found. For more information, visit http://rbl.efnetrbl.org/?i=%IPADDR"
+    BlockMessage: "Blacklisted proxy found. For more information, visit http://rbl.efnetrbl.org/?i=%IPADDR"

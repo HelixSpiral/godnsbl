@@ -18,11 +18,11 @@ type LookupService struct {
 
 // Dnsbl stores the data for each Dnbsl we have
 type Dnsbl struct {
-	Name       string            `yaml:"Name" json:"Name"`
-	Address    string            `yaml:"Address" json:"Address"`
-	Reply      map[string]string `yaml:"Reply" json:"Reply"`
-	BanList    []int             `yaml:"BanList" json:"BanList"`
-	BanMessage string            `yaml:"BanMessage" json:"BanMessage"`
+	Name         string            `yaml:"Name" json:"Name"`
+	Address      string            `yaml:"Address" json:"Address"`
+	Reply        map[string]string `yaml:"Reply" json:"Reply"`
+	BlockList    []int             `yaml:"BlockList" json:"BlockList"`
+	BlockMessage string            `yaml:"BlockMessage" json:"BlockMessage"`
 }
 
 // DnsblReturn is the standard data format for returning info from a Dnsbl

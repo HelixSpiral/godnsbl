@@ -24,7 +24,7 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 			if err != nil && !strings.Contains(err.Error(), "no such host") {
 				log.Fatal("Couldn't lookup the host:", err)
 			}
-			if len(lookupReply) == 0 || !replyMatch(lookupReply[0], l.DnsblListing[key].BanList) {
+			if len(lookupReply) == 0 || !replyMatch(lookupReply[0], l.DnsblListing[key].BlockList) {
 				counter.Lock()
 				counter.ClearCount++
 				counter.Unlock()
@@ -33,10 +33,10 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 
 			returnChan <- DnsblReturn{
 				IP:      stringIP,
-				Type:    "BAN",
+				Type:    "BLOCK",
 				Dnsbl:   l.DnsblListing[key].Name,
 				Total:   len(l.DnsblListing),
-				Message: strings.Replace(l.DnsblListing[key].BanMessage, "%IPADDR", stringIP, -1),
+				Message: strings.Replace(l.DnsblListing[key].BlockMessage, "%IPADDR", stringIP, -1),
 			}
 		}(key)
 	}
