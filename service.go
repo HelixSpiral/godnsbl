@@ -40,6 +40,8 @@ func NewLookupService() *LookupService {
 	return &LookupService{
 		DnsblTimeout: "30s",
 		StartTime:    time.Now().Unix(),
+
+		timeout: 30000000000, // This is just the value of ParseDuration("30s")
 	}
 }
 
