@@ -1,0 +1,40 @@
+DroneListing:
+  - Name: DroneBL
+    Address: .dnsbl.dronebl.org
+    Reply:
+      2: Sample
+      3: IRC Drone
+      5: Botler
+      6: Unknown spambot or drone
+      7: DDOS Drone
+      8: SOCKS Proxy
+      9: HTTP Proxy
+      10: ProxyChain
+      13: Brute force attackers
+      14: Open Wingate Proxy
+      15: Compromised router / gateway
+      17: Automatically determined botnet IPs (experimental)
+      255: Unknown
+    BanList:
+      - 2
+      - 3
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+      - 10
+      - 13
+      - 14
+      - 15
+      - 17
+    BanMessage: "You were detected in the DroneBL. For more information you can visit http://dronebl.org/lookup_branded?ip=%IPADDR"
+  
+  - Name: EfnetRBL
+    Address: .rbl.efnetrbl.org
+    Reply:
+      1: Open Proxy
+      2: spamtrap666
+      3: spamtrap50
+      4: TOR
+      5: Drones / Flooding
