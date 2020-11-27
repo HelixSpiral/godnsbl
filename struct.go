@@ -15,7 +15,7 @@ type Dnsbl struct {
 	Address    string            `yaml:"Address" json:"Address"`
 	Reply      map[string]string `yaml:"Reply" json:"Reply"`
 	BanList    []int             `yaml:"BanList" json:"BanList"`
-	BanMessage string            `yaml:"ManMessage" json:"BanMessage"`
+	BanMessage string            `yaml:"BanMessage" json:"BanMessage"`
 }
 
 // Standard data format for returning info from a Dnsbl

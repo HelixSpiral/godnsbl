@@ -38,3 +38,10 @@ DroneListing:
       3: spamtrap50
       4: TOR
       5: Drones / Flooding
+    BanList:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+    BanMessage: "Blacklisted proxy found. For more information, visit http://rbl.efnetrbl.org/?i=%IPADDR"
