@@ -20,7 +20,7 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 		go func(key int) {
 			lookup := fmt.Sprintf("%s%s", reversedIP, l.DnsblListing[key].Address) // Do the lookup for this BL
 			lookupReply, err := net.LookupHost(lookup)                             // Grab the replies
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "no such host") {
 				log.Fatal("Couldn't lookup the host:", err)
 			}
 			if len(lookupReply) == 0 || !replyMatch(lookupReply[0], l.DnsblListing[key].BanList) {
