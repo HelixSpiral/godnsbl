@@ -2,12 +2,12 @@
 package godnsbl
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // GetFirstDnsblReply gets the first reply from our lookup lists
@@ -16,6 +16,9 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 	reversedIP := reverseIP(stringIP)
 	returnChan := make(chan DnsblReturn)
 	counter := dnsblCounter{ClearCount: 0}
+
+	lookupCtx, lookupCancel := context.WithTimeout(context.Background(), l.timeout)
+	defer lookupCancel()
 
 	for key := range l.DnsblListing {
 		go func(key int) {
@@ -40,12 +43,20 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 				returnMessage = fmt.Sprintf("%s (%s)", returnMessage, l.DnsblListing[key].Reply[lookupReply[0][replyIndex:]])
 			}
 
-			returnChan <- DnsblReturn{
+			returnDnsblMessage := DnsblReturn{
 				IP:      stringIP,
 				Type:    "BLOCK",
 				Dnsbl:   l.DnsblListing[key].Name,
 				Total:   len(l.DnsblListing),
 				Message: returnMessage,
+			}
+
+			// We have this select so the goroutines don't hang after the first one returns
+			select {
+			case <-lookupCtx.Done():
+				return
+			case returnChan <- returnDnsblMessage:
+				return
 			}
 		}(key)
 	}
@@ -54,16 +65,15 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 	// 1. We find a match in any of the dronebl services we're using
 	// 2. We time out after the specified timeout
 	// 3. We successfully pass all lookups
-	idleTimeout := time.NewTicker(l.timeout)
-	defer idleTimeout.Stop()
 	for {
 		select {
 		case ok := <-returnChan:
 			counter.RLock()
 			ok.Clear = counter.ClearCount
 			counter.RUnlock()
+			lookupCancel()
 			return ok
-		case <-idleTimeout.C:
+		case <-lookupCtx.Done():
 			counter.RLock()
 			endcount := counter.ClearCount
 			counter.RUnlock()
@@ -79,6 +89,7 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 			endcount := counter.ClearCount
 			counter.RUnlock()
 			if endcount == len(l.DnsblListing) {
+				lookupCancel()
 				return DnsblReturn{
 					IP:    stringIP,
 					Type:  "CLEAR",
