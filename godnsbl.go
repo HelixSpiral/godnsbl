@@ -52,8 +52,10 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 
 	// Loop until one of the following happen:
 	// 1. We find a match in any of the dronebl services we're using
-	// 2. We time out after 30 seconds
+	// 2. We time out after the specified timeout
 	// 3. We successfully pass all lookups
+	idleTimeout := time.NewTicker(l.timeout)
+	defer idleTimeout.Stop()
 	for {
 		select {
 		case ok := <-returnChan:
@@ -61,7 +63,7 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 			ok.Clear = counter.ClearCount
 			counter.RUnlock()
 			return ok
-		case <-time.After(l.timeout):
+		case <-idleTimeout.C:
 			counter.RLock()
 			endcount := counter.ClearCount
 			counter.RUnlock()
