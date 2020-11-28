@@ -31,12 +31,21 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 				return // We don't have any replies for the given IP/BL
 			}
 
+			// Replace %IPADDR with the IP we're checking
+			returnMessage := strings.Replace(l.DnsblListing[key].BlockMessage, "%IPADDR", stringIP, -1)
+
+			// Lookup if we have a known index for the given reply, if we do tack it on the end of the message.
+			replyIndex := strings.LastIndex(lookupReply[0], ".") + 1
+			if l.DnsblListing[key].Reply[lookupReply[0][replyIndex:]] != "" {
+				returnMessage = fmt.Sprintf("%s (%s)", returnMessage, l.DnsblListing[key].Reply[lookupReply[0][replyIndex:]])
+			}
+
 			returnChan <- DnsblReturn{
 				IP:      stringIP,
 				Type:    "BLOCK",
 				Dnsbl:   l.DnsblListing[key].Name,
 				Total:   len(l.DnsblListing),
-				Message: strings.Replace(l.DnsblListing[key].BlockMessage, "%IPADDR", stringIP, -1),
+				Message: returnMessage,
 			}
 		}(key)
 	}
