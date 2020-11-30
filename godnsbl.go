@@ -71,7 +71,6 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 			counter.RLock()
 			ok.Clear = counter.ClearCount
 			counter.RUnlock()
-			lookupCancel()
 			return ok
 		case <-lookupCtx.Done():
 			counter.RLock()
@@ -89,7 +88,6 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 			endcount := counter.ClearCount
 			counter.RUnlock()
 			if endcount == len(l.DnsblListing) {
-				lookupCancel()
 				return DnsblReturn{
 					IP:    stringIP,
 					Type:  "CLEAR",
