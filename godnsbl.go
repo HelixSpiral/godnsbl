@@ -10,8 +10,8 @@ import (
 	"strings"
 )
 
-// GetFirstDnsblReply gets the first reply from our lookup lists
-func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
+// LookupIP gets the first reply from our lookup lists
+func (l *LookupService) LookupIP(stringIP string) DnsblReturn {
 	l.TotalChecked++
 	reversedIP := reverseIP(stringIP)
 	returnChan := make(chan DnsblReturn)
@@ -21,43 +21,7 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 	defer lookupCancel()
 
 	for key := range l.DnsblListing {
-		go func(key int) {
-			lookup := fmt.Sprintf("%s%s", reversedIP, l.DnsblListing[key].Address) // Do the lookup for this BL
-			lookupReply, err := net.LookupHost(lookup)                             // Grab the replies
-			if err != nil && !err.(*net.DNSError).IsNotFound {
-				log.Fatal("Couldn't lookup the host:", err)
-			}
-			if len(lookupReply) == 0 || !replyMatch(lookupReply[0], l.DnsblListing[key].BlockList) {
-				counter.Lock()
-				counter.ClearCount++
-				counter.Unlock()
-				return // We don't have any replies for the given IP/BL
-			}
-
-			// Replace %IPADDR with the IP we're checking
-			returnMessage := strings.Replace(l.DnsblListing[key].BlockMessage, "%IPADDR", stringIP, -1)
-
-			// Lookup if we have a known index for the given reply, if we do tack it on the end of the message.
-			replyIndex := strings.LastIndex(lookupReply[0], ".") + 1
-			if l.DnsblListing[key].Reply[lookupReply[0][replyIndex:]] != "" {
-				returnMessage = fmt.Sprintf("%s (%s)", returnMessage, l.DnsblListing[key].Reply[lookupReply[0][replyIndex:]])
-			}
-
-			returnDnsblMessage := DnsblReturn{
-				IP:      stringIP,
-				Type:    "BLOCK",
-				Dnsbl:   l.DnsblListing[key].Name,
-				Message: returnMessage,
-			}
-
-			// We have this select so the goroutines don't hang after the first one returns
-			select {
-			case <-lookupCtx.Done():
-				return
-			case returnChan <- returnDnsblMessage:
-				return
-			}
-		}(key)
+		go l.dnsblLookup(lookupCtx, returnChan, stringIP, reversedIP, key)
 	}
 
 	// Loop until one of the following happen:
@@ -67,7 +31,12 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 	for {
 		select {
 		case ok := <-returnChan:
-			return ok
+			counter.Lock()
+			counter.ClearCount++
+			counter.Unlock()
+			if ok.Type == "BLOCK" {
+				return ok
+			}
 		case <-lookupCtx.Done():
 			return DnsblReturn{
 				IP:    stringIP,
@@ -89,70 +58,18 @@ func (l *LookupService) GetFirstDnsblReply(stringIP string) DnsblReturn {
 	}
 }
 
-// GetAllDnsblReplies gets replies from all Dnsbls, not just the first to reply with a block
-func (l *LookupService) GetAllDnsblReplies(stringIP string) []DnsblReturn {
+// LookupIPGetAll gets replies from all Dnsbls, not just the first to reply with a block
+func (l *LookupService) LookupIPGetAll(stringIP string) []DnsblReturn {
 	l.TotalChecked++
 	reversedIP := reverseIP(stringIP)
 	returnChan := make(chan DnsblReturn)
-	counter := dnsblCounter{ClearCount: 0}
 	var replyList []DnsblReturn
 
 	lookupCtx, lookupCancel := context.WithTimeout(context.Background(), l.timeout)
 	defer lookupCancel()
 
 	for key := range l.DnsblListing {
-		go func(key int) {
-			var dnsblLookupReturn DnsblReturn
-			lookup := fmt.Sprintf("%s%s", reversedIP, l.DnsblListing[key].Address)
-			lookupReply, err := net.LookupHost(lookup)
-			if err != nil && !err.(*net.DNSError).IsNotFound {
-				log.Fatal("Couldn't lookup the host:", err)
-			}
-
-			if len(lookupReply) == 0 || !replyMatch(lookupReply[0], l.DnsblListing[key].BlockList) {
-				counter.Lock()
-				counter.ClearCount++
-				counter.Unlock()
-
-				dnsblLookupReturn = DnsblReturn{
-					IP:      stringIP,
-					Type:    "CLEAR",
-					Dnsbl:   l.DnsblListing[key].Name,
-					Message: "IP not found",
-				}
-
-				select {
-				case <-lookupCtx.Done(): // We timed out
-					return
-				case returnChan <- dnsblLookupReturn:
-					return
-				}
-			}
-
-			// Replace %IPADDR with the IP we're checking
-			returnMessage := strings.Replace(l.DnsblListing[key].BlockMessage, "%IPADDR", stringIP, -1)
-
-			// Lookup if we have a known index for the given reply, if we do tack it on the end of the message.
-			replyIndex := strings.LastIndex(lookupReply[0], ".") + 1
-			if l.DnsblListing[key].Reply[lookupReply[0][replyIndex:]] != "" {
-				returnMessage = fmt.Sprintf("%s (%s)", returnMessage, l.DnsblListing[key].Reply[lookupReply[0][replyIndex:]])
-			}
-
-			dnsblLookupReturn = DnsblReturn{
-				IP:      stringIP,
-				Type:    "BLOCK",
-				Dnsbl:   l.DnsblListing[key].Name,
-				Message: returnMessage,
-			}
-
-			select {
-			case <-lookupCtx.Done(): // We timed out, just return
-				return
-			case returnChan <- dnsblLookupReturn:
-				return
-			}
-
-		}(key)
+		go l.dnsblLookup(lookupCtx, returnChan, stringIP, reversedIP, key)
 	}
 
 	// Wait until we get all the replies or we time out
@@ -166,6 +83,43 @@ func (l *LookupService) GetAllDnsblReplies(stringIP string) []DnsblReturn {
 				return replyList
 			}
 		}
+	}
+}
+
+func (l *LookupService) dnsblLookup(lookupCtx context.Context, returnChan chan<- DnsblReturn, stringIP, reversedIP string, key int) {
+	returnDnsbl := DnsblReturn{
+		IP:      stringIP,
+		Type:    "CLEAR",
+		Dnsbl:   l.DnsblListing[key].Name,
+		Message: "IP not found",
+	}
+	lookup := fmt.Sprintf("%s%s", reversedIP, l.DnsblListing[key].Address)
+	lookupReply, err := net.LookupHost(lookup)
+	if err != nil && !err.(*net.DNSError).IsNotFound {
+		log.Fatal("Couldn't lookup the host:", err)
+	}
+	if len(lookupReply) == 0 || !replyMatch(lookupReply[0], l.DnsblListing[key].BlockList) {
+		returnChan <- returnDnsbl
+		return
+	}
+
+	// Replace %IPADDR with the IP we're checking
+	returnMessage := strings.Replace(l.DnsblListing[key].BlockMessage, "%IPADDR", stringIP, -1)
+
+	// Lookup if we have a known index for the given reply, if we do tack it on the end of the message.
+	replyIndex := strings.LastIndex(lookupReply[0], ".") + 1
+	if l.DnsblListing[key].Reply[lookupReply[0][replyIndex:]] != "" {
+		returnMessage = fmt.Sprintf("%s (%s)", returnMessage, l.DnsblListing[key].Reply[lookupReply[0][replyIndex:]])
+	}
+
+	returnDnsbl.Type = "BLOCK"
+	returnDnsbl.Message = returnMessage
+
+	select {
+	case <-lookupCtx.Done():
+		return
+	case returnChan <- returnDnsbl:
+		return
 	}
 }
 
