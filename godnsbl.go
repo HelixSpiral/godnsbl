@@ -51,7 +51,7 @@ func (l *LookupService) LookupIP(stringIP string) DnsblReturn {
 				return DnsblReturn{
 					IP:    stringIP,
 					Type:  "CLEAR",
-					Dnsbl: "N/A",
+					Dnsbl: "ALL",
 				}
 			}
 		}
@@ -88,10 +88,9 @@ func (l *LookupService) LookupIPGetAll(stringIP string) []DnsblReturn {
 
 func (l *LookupService) dnsblLookup(lookupCtx context.Context, returnChan chan<- DnsblReturn, stringIP, reversedIP string, key int) {
 	returnDnsbl := DnsblReturn{
-		IP:      stringIP,
-		Type:    "CLEAR",
-		Dnsbl:   l.DnsblListing[key].Name,
-		Message: "IP not found",
+		IP:    stringIP,
+		Type:  "CLEAR",
+		Dnsbl: l.DnsblListing[key].Name,
 	}
 	lookup := fmt.Sprintf("%s%s", reversedIP, l.DnsblListing[key].Address)
 	lookupReply, err := net.LookupHost(lookup)
@@ -99,8 +98,12 @@ func (l *LookupService) dnsblLookup(lookupCtx context.Context, returnChan chan<-
 		log.Fatal("Couldn't lookup the host:", err)
 	}
 	if len(lookupReply) == 0 || !replyMatch(lookupReply[0], l.DnsblListing[key].BlockList) {
-		returnChan <- returnDnsbl
-		return
+		select {
+		case <-lookupCtx.Done():
+			return
+		case returnChan <- returnDnsbl:
+			return
+		}
 	}
 
 	// Replace %IPADDR with the IP we're checking
