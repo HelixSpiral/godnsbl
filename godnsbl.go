@@ -30,20 +30,20 @@ func (l *LookupService) LookupIP(stringIP string) DnsblReturn {
 	// 3. We successfully pass all lookups
 	for {
 		select {
-		case ok := <-returnChan:
+		case ok := <-returnChan: // Increment counter, and if it's a BLOCK type then return immediately
 			counter.Lock()
 			counter.ClearCount++
 			counter.Unlock()
 			if ok.Type == "BLOCK" {
 				return ok
 			}
-		case <-lookupCtx.Done():
+		case <-lookupCtx.Done(): // Lookup timed out
 			return DnsblReturn{
 				IP:    stringIP,
 				Type:  "TIMEOUT",
 				Dnsbl: "N/A",
 			}
-		default:
+		default: // Check the counter and if it equals the number of Dnsbls we have, return all clear
 			counter.RLock()
 			endcount := counter.ClearCount
 			counter.RUnlock()
