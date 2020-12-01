@@ -30,8 +30,6 @@ type DnsblReturn struct {
 	IP      string
 	Type    string
 	Dnsbl   string
-	Total   int
-	Clear   int
 	Message string
 }
 
