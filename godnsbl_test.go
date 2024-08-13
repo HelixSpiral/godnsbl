@@ -12,7 +12,6 @@ func TestLookupIP(t *testing.T) {
 	dnsbl.DnsblListing = append(dnsbl.DnsblListing, godnsbl.Dnsbl{
 		Name:         "Test - DroneBL",
 		Address:      ".dnsbl.dronebl.org",
-		BlockList:    []int{1},
 		BlockMessage: "%IPADDR found",
 	})
 
@@ -35,14 +34,12 @@ func TestLookupIPGetAll(t *testing.T) {
 	dnsbl.DnsblListing = append(dnsbl.DnsblListing, godnsbl.Dnsbl{
 		Name:         "Test - DroneBL",
 		Address:      ".dnsbl.dronebl.org",
-		BlockList:    []int{1},
 		BlockMessage: "%IPADDR found",
 	})
 
 	dnsbl.DnsblListing = append(dnsbl.DnsblListing, godnsbl.Dnsbl{
 		Name:         "Test2 - DroneBL",
 		Address:      ".dnsbl.dronebl.org",
-		BlockList:    []int{1},
 		BlockMessage: "%IPADDR found",
 	})
 

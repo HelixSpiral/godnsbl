@@ -97,7 +97,7 @@ func (l *LookupService) dnsblLookup(lookupCtx context.Context, returnChan chan<-
 	if err != nil && !err.(*net.DNSError).IsNotFound {
 		log.Fatal("Couldn't lookup the host:", err)
 	}
-	if len(lookupReply) == 0 || !replyMatch(lookupReply[0], l.DnsblListing[key].BlockList) {
+	if len(lookupReply) == 0 || replyMatch(lookupReply[0], l.DnsblListing[key].AllowList) {
 		select {
 		case <-lookupCtx.Done():
 			return

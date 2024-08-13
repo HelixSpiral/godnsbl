@@ -23,5 +23,5 @@ blService.DnsblListing = append(blService.DnsblListing, godnsbl.Dnsbl{
 
 You can then use the lookup service:
 ```go
-lookup := blService.GetFirstDnsblReply("127.0.0.2")
+lookup := blService.LookupIP("127.0.0.2")
 ```

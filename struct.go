@@ -21,7 +21,7 @@ type Dnsbl struct {
 	Name         string            `yaml:"Name" json:"Name"`
 	Address      string            `yaml:"Address" json:"Address"`
 	Reply        map[string]string `yaml:"Reply" json:"Reply"`
-	BlockList    []int             `yaml:"BlockList" json:"BlockList"`
+	AllowList    []int             `yaml:"AllowList" json:"AllowList"`
 	BlockMessage string            `yaml:"BlockMessage" json:"BlockMessage"`
 }
 
